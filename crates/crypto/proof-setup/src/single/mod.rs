@@ -2,7 +2,7 @@
 #![deny(clippy::unwrap_used)]
 // Todo: prune public interface once we know exactly what's needed.
 mod dlog;
-pub(crate) mod group;
+pub mod group;
 pub mod log;
 mod phase1;
 mod phase2;
