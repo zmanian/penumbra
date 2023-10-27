@@ -386,13 +386,6 @@ impl Phase1RawCeremonyCRS {
         }
     }
 
-    pub fn validate(self) -> Option<Phase1CeremonyCRS> {
-        let out = transform_parallel(self.0, |x| {
-            x.validate().ok_or(anyhow!("failed to validate"))
-        });
-        Some(Phase1CeremonyCRS(flatten_results(out).ok()?))
-    }
-
     /// This should only be used when the data is known to be from a trusted source.
     pub fn unchecked_from_protobuf(value: pb::CeremonyCrs) -> anyhow::Result<Self> {
         Ok(Self([
@@ -409,6 +402,15 @@ impl Phase1RawCeremonyCRS {
     /// Create a combined CRS from individual ceremony elements.
     pub fn from_elements(elements: [Phase1RawCRSElements; NUM_CIRCUITS]) -> Self {
         Self(elements)
+    }
+}
+
+impl TryFrom<Phase1RawCeremonyCRS> for Phase1CeremonyCRS {
+    type Error = anyhow::Error;
+
+    fn try_from(data: Phase1RawCeremonyCRS) -> Result<Phase1CeremonyCRS> {
+        let out = transform_parallel(data.0, |x| x.validate());
+        Ok(Phase1CeremonyCRS(flatten_results(out)?))
     }
 }
 
