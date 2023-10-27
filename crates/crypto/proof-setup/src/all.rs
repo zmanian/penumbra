@@ -398,6 +398,11 @@ impl Phase1RawCeremonyCRS {
             from_bytes_unchecked::<Phase1RawCRSElements>(value.nullifer_derivation_crs.as_slice())?,
         ]))
     }
+
+    /// Create a combined CRS from individual ceremony elements.
+    pub fn from_elements(elements: [Phase1RawCRSElements; NUM_CIRCUITS]) -> Self {
+        Self(elements)
+    }
 }
 
 impl TryInto<pb::CeremonyCrs> for Phase1RawCeremonyCRS {
