@@ -69,7 +69,7 @@ impl Component for Dex {
                         .height
                         .try_into()
                         .expect("height is part of the end block data"),
-                    current_epoch.start_height,
+                    current_epoch,
                     // Always include both ends of the target pair as fixed candidates.
                     routing_params
                         .clone()

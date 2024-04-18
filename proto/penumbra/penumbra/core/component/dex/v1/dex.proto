@@ -227,6 +227,8 @@ message BatchSwapOutputData {
   TradingPair trading_pair = 8;
   // The starting block height of the epoch for which the batch swap data is valid.
   uint64 epoch_starting_height = 9;
+  // The prefix (epoch, block) of the position where this batch swap occurred.
+  uint64 sct_position_prefix = 10;
 }
 
 // The trading function for a specific pair.

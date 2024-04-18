@@ -162,6 +162,7 @@ mod tests {
                     height: 1,
                     trading_pair: pair_1.into_directed_trading_pair().into(),
                     epoch_starting_height: 0,
+                    sct_position_prefix: Default::default(),
                 },
                 None,
                 None,
@@ -252,7 +253,16 @@ mod tests {
         let routing_params = state.routing_params().await.unwrap();
         // This call should panic due to the outflow of gn not being covered by the circuit breaker.
         state
-            .handle_batch_swaps(trading_pair, swap_flow, 0, 0, routing_params)
+            .handle_batch_swaps(
+                trading_pair,
+                swap_flow,
+                0,
+                Epoch {
+                    index: 0,
+                    start_height: 0,
+                },
+                routing_params,
+            )
             .await
             .expect("unable to process batch swaps");
     }

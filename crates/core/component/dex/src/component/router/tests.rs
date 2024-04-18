@@ -5,6 +5,7 @@ use core::panic;
 use futures::StreamExt;
 use penumbra_asset::{asset, Value};
 use penumbra_num::{fixpoint::U128x128, Amount};
+use penumbra_sct::epoch::Epoch;
 use rand_core::OsRng;
 use std::sync::Arc;
 
@@ -1024,7 +1025,16 @@ async fn best_position_route_and_fill() -> anyhow::Result<()> {
         .unwrap();
     let routing_params = state.routing_params().await.unwrap();
     state
-        .handle_batch_swaps(trading_pair, swap_flow, 0u32.into(), 0, routing_params)
+        .handle_batch_swaps(
+            trading_pair,
+            swap_flow,
+            0u32.into(),
+            Epoch {
+                index: 0,
+                start_height: 0,
+            },
+            routing_params,
+        )
         .await
         .expect("unable to process batch swaps");
 
@@ -1165,7 +1175,16 @@ async fn multi_hop_route_and_fill() -> anyhow::Result<()> {
         .unwrap();
     let routing_params = state.routing_params().await.unwrap();
     state
-        .handle_batch_swaps(trading_pair, swap_flow, 0u32.into(), 0, routing_params)
+        .handle_batch_swaps(
+            trading_pair,
+            swap_flow,
+            0u32.into(),
+            Epoch {
+                index: 0,
+                start_height: 0,
+            },
+            routing_params,
+        )
         .await
         .expect("unable to process batch swaps");
 

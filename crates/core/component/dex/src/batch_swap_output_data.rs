@@ -6,11 +6,12 @@ use ark_r1cs_std::{
     select::CondSelectGadget,
 };
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
-use decaf377::{r1cs::FqVar, Fq};
+use decaf377::Fq;
 use penumbra_proto::{penumbra::core::component::dex::v1 as pb, DomainType};
+use penumbra_tct::{r1cs::PositionVar, Position};
 use serde::{Deserialize, Serialize};
 
-use penumbra_num::fixpoint::{bit_constrain, U128x128, U128x128Var};
+use penumbra_num::fixpoint::{U128x128, U128x128Var};
 use penumbra_num::{Amount, AmountVar};
 
 use crate::TradingPairVar;
@@ -38,6 +39,8 @@ pub struct BatchSwapOutputData {
     pub trading_pair: TradingPair,
     /// The starting block height of the epoch for which the batch swap data is valid.
     pub epoch_starting_height: u64,
+    /// The position prefix where this batch swap occurred. The commitment index must be 0.
+    pub sct_position_prefix: Position,
 }
 
 impl BatchSwapOutputData {
@@ -117,19 +120,14 @@ impl ToConstraintField<Fq> for BatchSwapOutputData {
                 .expect("U128x128 types are Bls12-377 field members"),
         );
         public_inputs.extend(
-            Fq::from(self.height)
-                .to_field_elements()
-                .expect("Fq types are Bls12-377 field members"),
-        );
-        public_inputs.extend(
             self.trading_pair
                 .to_field_elements()
                 .expect("trading_pair is a Bls12-377 field member"),
         );
         public_inputs.extend(
-            Fq::from(self.epoch_starting_height)
+            self.sct_position_prefix
                 .to_field_elements()
-                .expect("Fq types are Bls12-377 field members"),
+                .expect("Position types are Bls12-377 field members"),
         );
         Some(public_inputs)
     }
@@ -142,9 +140,8 @@ pub struct BatchSwapOutputDataVar {
     pub lambda_2: U128x128Var,
     pub unfilled_1: U128x128Var,
     pub unfilled_2: U128x128Var,
-    pub height: FqVar,
     pub trading_pair: TradingPairVar,
-    pub epoch_starting_height: FqVar,
+    pub sct_position_prefix: PositionVar,
 }
 
 impl AllocVar<BatchSwapOutputData, Fq> for BatchSwapOutputDataVar {
@@ -168,18 +165,13 @@ impl AllocVar<BatchSwapOutputData, Fq> for BatchSwapOutputDataVar {
         let unfilled_1 = U128x128Var::new_variable(cs.clone(), || Ok(unfilled_1_fixpoint), mode)?;
         let unfilled_2_fixpoint: U128x128 = output_data.unfilled_2.into();
         let unfilled_2 = U128x128Var::new_variable(cs.clone(), || Ok(unfilled_2_fixpoint), mode)?;
-        let height = FqVar::new_variable(cs.clone(), || Ok(Fq::from(output_data.height)), mode)?;
-        // Check the height is 64 bits
-        let _ = bit_constrain(height.clone(), 64);
         let trading_pair = TradingPairVar::new_variable_unchecked(
             cs.clone(),
             || Ok(output_data.trading_pair),
             mode,
         )?;
-        let epoch_starting_height =
-            FqVar::new_variable(cs, || Ok(Fq::from(output_data.epoch_starting_height)), mode)?;
-        // Check the epoch starting height is 64 bits
-        let _ = bit_constrain(epoch_starting_height.clone(), 64);
+        let sct_position_prefix =
+            PositionVar::new_variable(cs.clone(), || Ok(output_data.sct_position_prefix), mode)?;
 
         Ok(Self {
             delta_1,
@@ -189,8 +181,7 @@ impl AllocVar<BatchSwapOutputData, Fq> for BatchSwapOutputDataVar {
             unfilled_1,
             unfilled_2,
             trading_pair,
-            height,
-            epoch_starting_height,
+            sct_position_prefix,
         })
     }
 }
@@ -211,6 +202,7 @@ impl From<BatchSwapOutputData> for pb::BatchSwapOutputData {
             height: s.height,
             epoch_starting_height: s.epoch_starting_height,
             trading_pair: Some(s.trading_pair.into()),
+            sct_position_prefix: s.sct_position_prefix.into(),
         }
     }
 }
@@ -276,6 +268,14 @@ impl From<BatchSwapOutputData> for pb::BatchSwapOutputDataResponse {
 impl TryFrom<pb::BatchSwapOutputData> for BatchSwapOutputData {
     type Error = anyhow::Error;
     fn try_from(s: pb::BatchSwapOutputData) -> Result<Self, Self::Error> {
+        let sct_position_prefix = {
+            let prefix = Position::from(s.sct_position_prefix);
+            anyhow::ensure!(
+                prefix.commitment() == 0,
+                "sct_position_prefix.commitment() != 0"
+            );
+            prefix
+        };
         Ok(Self {
             delta_1: s
                 .delta_1
@@ -307,6 +307,7 @@ impl TryFrom<pb::BatchSwapOutputData> for BatchSwapOutputData {
                 .ok_or_else(|| anyhow!("Missing trading_pair"))?
                 .try_into()?,
             epoch_starting_height: s.epoch_starting_height,
+            sct_position_prefix,
         })
     }
 }
@@ -421,9 +422,10 @@ mod tests {
                     lambda_2: Amount::from(1u32),
                     unfilled_1: Amount::from(1u32),
                     unfilled_2: Amount::from(1u32),
-                    height: 1,
+                    height: 0,
                     trading_pair,
-                    epoch_starting_height: 1,
+                    epoch_starting_height: 0,
+                    sct_position_prefix: 0u64.into(),
                 },
             }
         }
@@ -445,6 +447,7 @@ mod tests {
             height: 0u64,
             trading_pair,
             epoch_starting_height: 0u64,
+            sct_position_prefix: 0u64.into(),
         };
 
         // Now suppose our user's contribution is:
