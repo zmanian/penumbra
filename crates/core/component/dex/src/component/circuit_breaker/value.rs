@@ -161,7 +161,6 @@ mod tests {
                     unfilled_2: 0u64.into(),
                     height: 1,
                     trading_pair: pair_1.into_directed_trading_pair().into(),
-                    epoch_starting_height: 0,
                     sct_position_prefix: Default::default(),
                 },
                 None,

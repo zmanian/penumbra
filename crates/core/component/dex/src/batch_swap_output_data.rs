@@ -37,8 +37,6 @@ pub struct BatchSwapOutputData {
     pub height: u64,
     /// The trading pair associated with the batch swap.
     pub trading_pair: TradingPair,
-    /// The starting block height of the epoch for which the batch swap data is valid.
-    pub epoch_starting_height: u64,
     /// The position prefix where this batch swap occurred. The commitment index must be 0.
     pub sct_position_prefix: Position,
 }
@@ -192,6 +190,7 @@ impl DomainType for BatchSwapOutputData {
 
 impl From<BatchSwapOutputData> for pb::BatchSwapOutputData {
     fn from(s: BatchSwapOutputData) -> Self {
+        #[allow(deprecated)]
         pb::BatchSwapOutputData {
             delta_1: Some(s.delta_1.into()),
             delta_2: Some(s.delta_2.into()),
@@ -200,9 +199,12 @@ impl From<BatchSwapOutputData> for pb::BatchSwapOutputData {
             unfilled_1: Some(s.unfilled_1.into()),
             unfilled_2: Some(s.unfilled_2.into()),
             height: s.height,
-            epoch_starting_height: s.epoch_starting_height,
             trading_pair: Some(s.trading_pair.into()),
             sct_position_prefix: s.sct_position_prefix.into(),
+            // Deprecated fields we explicitly fill with defaults.
+            // We could instead use a `..Default::default()` here, but that would silently
+            // work if we were to add fields to the domain type.
+            epoch_starting_height: Default::default(),
         }
     }
 }
@@ -306,7 +308,6 @@ impl TryFrom<pb::BatchSwapOutputData> for BatchSwapOutputData {
                 .trading_pair
                 .ok_or_else(|| anyhow!("Missing trading_pair"))?
                 .try_into()?,
-            epoch_starting_height: s.epoch_starting_height,
             sct_position_prefix,
         })
     }
@@ -424,7 +425,6 @@ mod tests {
                     unfilled_2: Amount::from(1u32),
                     height: 0,
                     trading_pair,
-                    epoch_starting_height: 0,
                     sct_position_prefix: 0u64.into(),
                 },
             }
@@ -446,7 +446,6 @@ mod tests {
             unfilled_2: Amount::from(50u64),
             height: 0u64,
             trading_pair,
-            epoch_starting_height: 0u64,
             sct_position_prefix: 0u64.into(),
         };
 

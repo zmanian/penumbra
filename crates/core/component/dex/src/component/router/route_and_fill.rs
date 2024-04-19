@@ -91,7 +91,6 @@ pub trait HandleBatchSwaps: StateWrite + Sized {
         let epoch = self.get_current_epoch().await.expect("epoch is set");
         let output_data = BatchSwapOutputData {
             height: block_height,
-            epoch_starting_height: epoch.start_height,
             trading_pair,
             delta_1,
             delta_2,

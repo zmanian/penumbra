@@ -366,7 +366,6 @@ impl DummyWitness for SwapClaimCircuit {
             unfilled_2: Amount::from(10u64),
             height: 0,
             trading_pair: swap_plaintext.trading_pair,
-            epoch_starting_height: 0,
             sct_position_prefix: Default::default(),
         };
         let note_blinding_1 = Fq::from(1);
@@ -650,7 +649,6 @@ mod tests {
             unfilled_2: test_bsod.unfilled_2,
             height: height.into(),
             trading_pair: swap_plaintext.trading_pair,
-            epoch_starting_height: (epoch_duration * position.epoch()).into(),
             sct_position_prefix: Default::default(),
         };
         let (lambda_1, lambda_2) = output_data.pro_rata_outputs((delta_1_i, delta_2_i));
@@ -783,7 +781,6 @@ mod tests {
             unfilled_2: test_bsod.unfilled_2,
             height: height.into(),
             trading_pair: swap_plaintext.trading_pair,
-            epoch_starting_height: (epoch_duration * position.epoch()).into(),
             sct_position_prefix: Default::default()
         };
         let (lambda_1, lambda_2) = output_data.pro_rata_outputs((delta_1_i, delta_2_i));
@@ -884,7 +881,6 @@ mod tests {
             unfilled_2: test_bsod.unfilled_2,
             height: height.into(),
             trading_pair: swap_plaintext.trading_pair,
-            epoch_starting_height: (epoch_duration * dummy_position.epoch()).into(),
             sct_position_prefix: Default::default()
         };
         let (lambda_1, lambda_2) = output_data.pro_rata_outputs((delta_1_i, delta_2_i));

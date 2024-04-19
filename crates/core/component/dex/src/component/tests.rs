@@ -756,7 +756,6 @@ async fn swap_execution_tests() -> anyhow::Result<()> {
             unfilled_1: 0u32.into(),
             unfilled_2: 0u32.into(),
             height: 0,
-            epoch_starting_height: 0,
             trading_pair,
             sct_position_prefix: Default::default(),
         }
