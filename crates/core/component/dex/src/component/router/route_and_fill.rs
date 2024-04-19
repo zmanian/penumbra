@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use cnidarium::StateWrite;
 use penumbra_asset::{asset, Value};
 use penumbra_num::Amount;
-use penumbra_sct::epoch::Epoch;
+use penumbra_sct::component::clock::EpochRead;
 use tracing::instrument;
 
 use crate::{
@@ -24,14 +24,13 @@ use super::fill_route::FillError;
 /// a block's batch swap flows.
 #[async_trait]
 pub trait HandleBatchSwaps: StateWrite + Sized {
-    #[instrument(skip(self, trading_pair, batch_data, block_height, epoch, params))]
+    #[instrument(skip(self, trading_pair, batch_data, block_height, params))]
     async fn handle_batch_swaps(
         self: &mut Arc<Self>,
         trading_pair: TradingPair,
         batch_data: SwapFlow,
-        // TODO: why not read these 2 from the state?
+        // This will be read from the ABCI request
         block_height: u64,
-        epoch: Epoch,
         params: RoutingParams,
     ) -> Result<()>
     where
@@ -89,6 +88,7 @@ pub trait HandleBatchSwaps: StateWrite + Sized {
             ),
             None => (0u64.into(), delta_2),
         };
+        let epoch = self.get_current_epoch().await.expect("epoch is set");
         let output_data = BatchSwapOutputData {
             height: block_height,
             epoch_starting_height: epoch.start_height,

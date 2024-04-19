@@ -6,7 +6,6 @@ use cnidarium::{ArcStateDeltaExt, StateDelta, TempStorage};
 use futures::StreamExt;
 use penumbra_asset::{asset, Value};
 use penumbra_num::Amount;
-use penumbra_sct::epoch::Epoch;
 use rand_core::OsRng;
 
 use crate::lp::action::PositionOpen;
@@ -633,16 +632,7 @@ async fn swap_execution_tests() -> anyhow::Result<()> {
         .unwrap();
     let routing_params = state.routing_params().await.unwrap();
     state
-        .handle_batch_swaps(
-            trading_pair,
-            swap_flow,
-            0,
-            Epoch {
-                index: 0,
-                start_height: 0,
-            },
-            routing_params,
-        )
+        .handle_batch_swaps(trading_pair, swap_flow, 0, routing_params)
         .await
         .expect("unable to process batch swaps");
 
@@ -750,16 +740,7 @@ async fn swap_execution_tests() -> anyhow::Result<()> {
         .unwrap();
     let routing_params = state.routing_params().await.unwrap();
     state
-        .handle_batch_swaps(
-            trading_pair,
-            swap_flow,
-            0u32.into(),
-            Epoch {
-                index: 0,
-                start_height: 0,
-            },
-            routing_params,
-        )
+        .handle_batch_swaps(trading_pair, swap_flow, 0u32.into(), routing_params)
         .await
         .expect("unable to process batch swaps");
 
