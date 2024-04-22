@@ -261,12 +261,10 @@ impl ConstraintSynthesizer<Fq> for SwapClaimCircuit {
 
         // Validate the swap commitment's height matches the output data's height (i.e. the clearing price height).
         output_data_var
-            .sct_position_prefix
-            .block()?
+            .block_within_epoch
             .enforce_equal(&position_var.block()?)?;
         output_data_var
-            .sct_position_prefix
-            .epoch()?
+            .epoch
             .enforce_equal(&position_var.epoch()?)?;
 
         // Validate that the output data's trading pair matches the note commitment's trading pair.

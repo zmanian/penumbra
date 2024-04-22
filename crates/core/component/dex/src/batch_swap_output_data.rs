@@ -6,12 +6,12 @@ use ark_r1cs_std::{
     select::CondSelectGadget,
 };
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
-use decaf377::Fq;
+use decaf377::{r1cs::FqVar, Fq};
 use penumbra_proto::{penumbra::core::component::dex::v1 as pb, DomainType};
-use penumbra_tct::{r1cs::PositionVar, Position};
+use penumbra_tct::Position;
 use serde::{Deserialize, Serialize};
 
-use penumbra_num::fixpoint::{U128x128, U128x128Var};
+use penumbra_num::fixpoint::{bit_constrain, U128x128, U128x128Var};
 use penumbra_num::{Amount, AmountVar};
 
 use crate::TradingPairVar;
@@ -123,7 +123,12 @@ impl ToConstraintField<Fq> for BatchSwapOutputData {
                 .expect("trading_pair is a Bls12-377 field member"),
         );
         public_inputs.extend(
-            self.sct_position_prefix
+            Fq::from(self.sct_position_prefix.epoch())
+                .to_field_elements()
+                .expect("Position types are Bls12-377 field members"),
+        );
+        public_inputs.extend(
+            Fq::from(self.sct_position_prefix.block())
                 .to_field_elements()
                 .expect("Position types are Bls12-377 field members"),
         );
@@ -139,7 +144,8 @@ pub struct BatchSwapOutputDataVar {
     pub unfilled_1: U128x128Var,
     pub unfilled_2: U128x128Var,
     pub trading_pair: TradingPairVar,
-    pub sct_position_prefix: PositionVar,
+    pub epoch: FqVar,
+    pub block_within_epoch: FqVar,
 }
 
 impl AllocVar<BatchSwapOutputData, Fq> for BatchSwapOutputDataVar {
@@ -168,8 +174,18 @@ impl AllocVar<BatchSwapOutputData, Fq> for BatchSwapOutputDataVar {
             || Ok(output_data.trading_pair),
             mode,
         )?;
-        let sct_position_prefix =
-            PositionVar::new_variable(cs.clone(), || Ok(output_data.sct_position_prefix), mode)?;
+        let epoch = FqVar::new_variable(
+            cs.clone(),
+            || Ok(Fq::from(output_data.sct_position_prefix.epoch())),
+            mode,
+        )?;
+        bit_constrain(epoch.clone(), 16)?;
+        let block_within_epoch = FqVar::new_variable(
+            cs.clone(),
+            || Ok(Fq::from(output_data.sct_position_prefix.block())),
+            mode,
+        )?;
+        bit_constrain(block_within_epoch.clone(), 16)?;
 
         Ok(Self {
             delta_1,
@@ -179,7 +195,8 @@ impl AllocVar<BatchSwapOutputData, Fq> for BatchSwapOutputDataVar {
             unfilled_1,
             unfilled_2,
             trading_pair,
-            sct_position_prefix,
+            epoch,
+            block_within_epoch,
         })
     }
 }
