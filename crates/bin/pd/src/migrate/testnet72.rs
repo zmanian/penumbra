@@ -1,7 +1,7 @@
 //! Contains functions related to the migration script of Testnet72
 
 use anyhow;
-use cnidarium::{Snapshot, StateDelta, StateRead, StateWrite, Storage};
+use cnidarium::{Snapshot, StateDelta, StateRead, Storage};
 use futures::StreamExt as _;
 use jmt::RootHash;
 use penumbra_app::app::StateReadExt as _;
@@ -13,8 +13,8 @@ use penumbra_sct::component::clock::{EpochManager, EpochRead};
 use penumbra_sct::component::rpc::Server as SctServer;
 use penumbra_tct::Position;
 use prost::Message;
+use std::path::PathBuf;
 use std::sync::Arc;
-use std::{collections::HashMap, path::PathBuf};
 use tonic::IntoRequest;
 
 use crate::testnet::generate::TestnetConfig;
