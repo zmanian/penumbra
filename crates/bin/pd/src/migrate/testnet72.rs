@@ -129,7 +129,6 @@ pub async fn migrate(
     path_to_export: PathBuf,
     genesis_start: Option<tendermint::time::Time>,
 ) -> anyhow::Result<()> {
-    let start_time = std::time::SystemTime::now();
     let rocksdb_dir = path_to_export.join("rocksdb");
     let storage = Storage::load(rocksdb_dir.clone(), SUBSTORE_PREFIXES.to_vec()).await?;
     let export_state = storage.latest_snapshot();
@@ -142,18 +141,21 @@ pub async fn migrate(
     let post_upgrade_height = pre_upgrade_height.wrapping_add(1);
 
     let mut delta = StateDelta::new(export_state);
-    let ctx = Context::new(storage.clone());
+    let (migration_duration, post_upgrade_root_hash) = {
+        let start_time = std::time::SystemTime::now();
+        let ctx = Context::new(storage.clone());
 
-    // Translate inside dex storage.
-    translate_dex_storage(ctx.clone(), &mut delta).await?;
-    // Translate inside compact block storage.
-    translate_compact_block_storage(ctx.clone(), &mut delta).await?;
+        // Translate inside dex storage.
+        translate_dex_storage(ctx.clone(), &mut delta).await?;
+        // Translate inside compact block storage.
+        translate_compact_block_storage(ctx.clone(), &mut delta).await?;
 
-    delta.put_block_height(0u64);
-    let post_upgrade_root_hash = storage.commit_in_place(delta).await?;
-    tracing::info!(?post_upgrade_root_hash, "post-upgrade root hash");
+        delta.put_block_height(0u64);
+        let post_upgrade_root_hash = storage.commit_in_place(delta).await?;
+        tracing::info!(?post_upgrade_root_hash, "post-upgrade root hash");
 
-    let migration_duration = start_time.elapsed().unwrap();
+        (start_time.elapsed().unwrap(), post_upgrade_root_hash)
+    };
 
     storage.release().await;
     let storage = Storage::load(rocksdb_dir, SUBSTORE_PREFIXES.to_vec()).await?;
