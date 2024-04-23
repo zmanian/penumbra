@@ -100,6 +100,8 @@ pub trait HandleBatchSwaps: StateWrite + Sized {
             unfilled_2,
             sct_position_prefix: (
                 u16::try_from(epoch.index).expect("epoch index should be small enough"),
+                // The block index is determined by looking at how many blocks have elapsed since
+                // the start of the epoch.
                 u16::try_from(block_height - epoch.start_height)
                     .expect("block index should be small enough"),
                 0,
