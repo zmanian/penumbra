@@ -217,6 +217,9 @@ impl Opt {
                     cb_count += 1;
                     bytes += block_rsp.encoded_len();
                     let block: CompactBlock = block_rsp.try_into()?;
+                    if block.swap_outputs.len() > 0 {
+                        dbg!("batch swap outputs, height: {}, data: {}", block.height, block.swap_outputs);
+                    }
                     nf_count += block.nullifiers.len();
                     sp_rolled_up_count += block
                         .state_payloads
