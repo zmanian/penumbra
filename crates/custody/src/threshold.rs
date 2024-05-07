@@ -53,6 +53,23 @@ where
     Ok(serde_json::from_str::<<T as DomainType>::Proto>(data)?.try_into()?)
 }
 
+async fn read_message_until_success<T: DomainType>(terminal: &impl Terminal) -> Result<T>
+where
+    T: DomainType,
+    anyhow::Error: From<<T as TryFrom<<T as DomainType>::Proto>>::Error>,
+    <T as DomainType>::Proto: Deserialize<'a>,
+{
+    loop {
+        let string = terminal
+            .next_response()
+            .await?
+            .ok_or(anyhow!("expected message from coordinator"))?;
+        if let Ok(x) = serde_json::from_str::<<T as DomainType>::Proto>(&string)?.try_into() {
+            return Ok(x);
+        }
+    }
+}
+
 /// Act as a follower in the signing protocol.
 ///
 /// All this function does is produce side effects on the terminal, potentially returning
