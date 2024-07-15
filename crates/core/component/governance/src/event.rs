@@ -36,9 +36,15 @@ pub fn proposal_withdraw(withdraw: &ProposalWithdraw) -> pb::EventProposalWithdr
     }
 }
 
-pub fn proposal_submit(submit: &ProposalSubmit) -> pb::EventProposalSubmit {
+pub fn proposal_submit(
+    submit: &ProposalSubmit,
+    start_height: u64,
+    end_height: u64,
+) -> pb::EventProposalSubmit {
     pb::EventProposalSubmit {
         submit: Some(pb::ProposalSubmit::from(submit.clone())),
+        start_height,
+        end_height,
     }
 }
 
