@@ -2446,9 +2446,23 @@ impl serde::Serialize for EventProposalSubmit {
         if self.submit.is_some() {
             len += 1;
         }
+        if self.start_height != 0 {
+            len += 1;
+        }
+        if self.end_height != 0 {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("penumbra.core.component.governance.v1.EventProposalSubmit", len)?;
         if let Some(v) = self.submit.as_ref() {
             struct_ser.serialize_field("submit", v)?;
+        }
+        if self.start_height != 0 {
+            #[allow(clippy::needless_borrow)]
+            struct_ser.serialize_field("startHeight", ToString::to_string(&self.start_height).as_str())?;
+        }
+        if self.end_height != 0 {
+            #[allow(clippy::needless_borrow)]
+            struct_ser.serialize_field("endHeight", ToString::to_string(&self.end_height).as_str())?;
         }
         struct_ser.end()
     }
@@ -2461,11 +2475,17 @@ impl<'de> serde::Deserialize<'de> for EventProposalSubmit {
     {
         const FIELDS: &[&str] = &[
             "submit",
+            "start_height",
+            "startHeight",
+            "end_height",
+            "endHeight",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Submit,
+            StartHeight,
+            EndHeight,
             __SkipField__,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
@@ -2489,6 +2509,8 @@ impl<'de> serde::Deserialize<'de> for EventProposalSubmit {
                     {
                         match value {
                             "submit" => Ok(GeneratedField::Submit),
+                            "startHeight" | "start_height" => Ok(GeneratedField::StartHeight),
+                            "endHeight" | "end_height" => Ok(GeneratedField::EndHeight),
                             _ => Ok(GeneratedField::__SkipField__),
                         }
                     }
@@ -2509,6 +2531,8 @@ impl<'de> serde::Deserialize<'de> for EventProposalSubmit {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut submit__ = None;
+                let mut start_height__ = None;
+                let mut end_height__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Submit => {
@@ -2517,6 +2541,22 @@ impl<'de> serde::Deserialize<'de> for EventProposalSubmit {
                             }
                             submit__ = map_.next_value()?;
                         }
+                        GeneratedField::StartHeight => {
+                            if start_height__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("startHeight"));
+                            }
+                            start_height__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
+                        GeneratedField::EndHeight => {
+                            if end_height__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("endHeight"));
+                            }
+                            end_height__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
                         GeneratedField::__SkipField__ => {
                             let _ = map_.next_value::<serde::de::IgnoredAny>()?;
                         }
@@ -2524,6 +2564,8 @@ impl<'de> serde::Deserialize<'de> for EventProposalSubmit {
                 }
                 Ok(EventProposalSubmit {
                     submit: submit__,
+                    start_height: start_height__.unwrap_or_default(),
+                    end_height: end_height__.unwrap_or_default(),
                 })
             }
         }
@@ -4783,6 +4825,92 @@ impl<'de> serde::Deserialize<'de> for ProposalInfoResponse {
             }
         }
         deserializer.deserialize_struct("penumbra.core.component.governance.v1.ProposalInfoResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for ProposalKind {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let variant = match self {
+            Self::Signaling => "SIGNALING",
+            Self::Emergency => "EMERGENCY",
+            Self::ParameterChange => "PARAMETER_CHANGE",
+            Self::CommunityPoolSpend => "COMMUNITY_POOL_SPEND",
+            Self::UpgradePlan => "UPGRADE_PLAN",
+            Self::FreezeIbcClient => "FREEZE_IBC_CLIENT",
+            Self::UnfreezeIbcClient => "UNFREEZE_IBC_CLIENT",
+        };
+        serializer.serialize_str(variant)
+    }
+}
+impl<'de> serde::Deserialize<'de> for ProposalKind {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "SIGNALING",
+            "EMERGENCY",
+            "PARAMETER_CHANGE",
+            "COMMUNITY_POOL_SPEND",
+            "UPGRADE_PLAN",
+            "FREEZE_IBC_CLIENT",
+            "UNFREEZE_IBC_CLIENT",
+        ];
+
+        struct GeneratedVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = ProposalKind;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(formatter, "expected one of: {:?}", &FIELDS)
+            }
+
+            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+                    })
+            }
+
+            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+                    })
+            }
+
+            fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "SIGNALING" => Ok(ProposalKind::Signaling),
+                    "EMERGENCY" => Ok(ProposalKind::Emergency),
+                    "PARAMETER_CHANGE" => Ok(ProposalKind::ParameterChange),
+                    "COMMUNITY_POOL_SPEND" => Ok(ProposalKind::CommunityPoolSpend),
+                    "UPGRADE_PLAN" => Ok(ProposalKind::UpgradePlan),
+                    "FREEZE_IBC_CLIENT" => Ok(ProposalKind::FreezeIbcClient),
+                    "UNFREEZE_IBC_CLIENT" => Ok(ProposalKind::UnfreezeIbcClient),
+                    _ => Err(serde::de::Error::unknown_variant(value, FIELDS)),
+                }
+            }
+        }
+        deserializer.deserialize_any(GeneratedVisitor)
     }
 }
 impl serde::Serialize for ProposalListRequest {

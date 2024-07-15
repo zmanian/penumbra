@@ -1288,6 +1288,12 @@ pub struct EventProposalSubmit {
     /// Details on the submitted proposal.
     #[prost(message, optional, tag = "1")]
     pub submit: ::core::option::Option<ProposalSubmit>,
+    /// The start height for the proposal.
+    #[prost(uint64, tag = "2")]
+    pub start_height: u64,
+    /// The end height for the proposal.
+    #[prost(uint64, tag = "3")]
+    pub end_height: u64,
 }
 impl ::prost::Name for EventProposalSubmit {
     const NAME: &'static str = "EventProposalSubmit";
@@ -1336,6 +1342,47 @@ impl ::prost::Name for EventProposalSlashed {
     const PACKAGE: &'static str = "penumbra.core.component.governance.v1";
     fn full_name() -> ::prost::alloc::string::String {
         ::prost::alloc::format!("penumbra.core.component.governance.v1.{}", Self::NAME)
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum ProposalKind {
+    Signaling = 0,
+    Emergency = 1,
+    ParameterChange = 2,
+    CommunityPoolSpend = 3,
+    UpgradePlan = 4,
+    FreezeIbcClient = 5,
+    UnfreezeIbcClient = 6,
+}
+impl ProposalKind {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            ProposalKind::Signaling => "SIGNALING",
+            ProposalKind::Emergency => "EMERGENCY",
+            ProposalKind::ParameterChange => "PARAMETER_CHANGE",
+            ProposalKind::CommunityPoolSpend => "COMMUNITY_POOL_SPEND",
+            ProposalKind::UpgradePlan => "UPGRADE_PLAN",
+            ProposalKind::FreezeIbcClient => "FREEZE_IBC_CLIENT",
+            ProposalKind::UnfreezeIbcClient => "UNFREEZE_IBC_CLIENT",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "SIGNALING" => Some(Self::Signaling),
+            "EMERGENCY" => Some(Self::Emergency),
+            "PARAMETER_CHANGE" => Some(Self::ParameterChange),
+            "COMMUNITY_POOL_SPEND" => Some(Self::CommunityPoolSpend),
+            "UPGRADE_PLAN" => Some(Self::UpgradePlan),
+            "FREEZE_IBC_CLIENT" => Some(Self::FreezeIbcClient),
+            "UNFREEZE_IBC_CLIENT" => Some(Self::UnfreezeIbcClient),
+            _ => None,
+        }
     }
 }
 /// Generated client implementations.
