@@ -809,6 +809,22 @@ impl Storage {
         .await?
     }
 
+    pub async fn all_asset_ids_in_notes(&self) -> anyhow::Result<Vec<Id>> {
+        let pool = self.pool.clone();
+
+        spawn_blocking(move || {
+            pool.get()?
+                .prepare_cached("SELECT DISTINCT asset_id FROM notes")?
+                .query_and_then([], |row| {
+                    let asset_id: Vec<u8> = row.get("asset_id")?;
+                    let asset_id = Id::try_from(asset_id.as_slice())?;
+                    anyhow::Ok(asset_id)
+                })?
+                .collect()
+        })
+        .await?
+    }
+
     pub async fn asset_by_id(&self, id: &Id) -> anyhow::Result<Option<Metadata>> {
         let id = id.to_bytes().to_vec();
 

@@ -489,7 +489,8 @@ impl ValidatorCmd {
 {}
 ",
                     generated_key_notice,
-                    toml::to_string_pretty(&template)?
+                    serde_json::to_string(&template)?
+//                    toml::to_string_pretty(&template)?
                 );
 
                 if let Some(file) = file {

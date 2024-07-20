@@ -364,6 +364,30 @@ impl ViewServer {
             partial_sync_height: full_sync_height, // Set these as the same for backwards compatibility following adding the partial_sync_height
         })
     }
+
+    async fn attempt_to_fix_dangling_asset_ids(&self) -> anyhow::Result<()> {
+        let all_ids = self.storage.all_asset_ids_in_notes().await?;
+        for id in all_ids.into_iter() {
+            tracing::error!(id = format!("{}", id));
+            if let Some(denom_metadata) = self
+                .asset_metadata_by_id(tonic::Request::new(AssetMetadataByIdRequest {
+                    asset_id: Some(id.into()),
+                }))
+                .await?
+                .into_inner()
+                .denom_metadata
+            {
+                tracing::error!(denom_metadata = format!("{:?}", denom_metadata));
+                // If we get metadata: great, record it.
+                self.storage
+                    .record_asset(denom_metadata.try_into()?)
+                    .await?;
+            } else {
+                tracing::warn!(asset_id = ?id, "unknown asset ID with no available metadata in notes");
+            }
+        }
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -1336,6 +1360,13 @@ impl ViewService for ViewServer {
             .map_err(|_| tonic::Status::invalid_argument("invalid address index"))?;
 
         let votable_at_height = request.get_ref().votable_at_height;
+
+        tracing::error!("IS THIS CODE UP TO DATE?");
+        // HACK: figure out all asset ids referenced in our notes, and try
+        // and record them, to make this visible in case something weird.
+        self.attempt_to_fix_dangling_asset_ids()
+            .await
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
         let notes = self
             .storage
