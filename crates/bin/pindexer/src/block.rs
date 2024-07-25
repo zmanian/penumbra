@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS block_details (
         event: &ContextualizedEvent,
     ) -> Result<(), anyhow::Error> {
         let pe = pb::EventBlockRoot::from_event(event.as_ref())?;
-        let timestamp = pe.timestamp.expect("Block has no timestamp");
+        let timestamp = pe.timestamp.unwrap_or_default();
 
         sqlx::query(
             "
