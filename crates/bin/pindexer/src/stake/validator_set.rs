@@ -29,7 +29,7 @@ impl AppView for ValidatorSet {
             "CREATE TABLE stake_validator_set (
                 id SERIAL PRIMARY KEY,
                 ik BYTEA NOT NULL,
-                ik_text TEXT NOT NULL,
+                identity_key TEXT NOT NULL,
                 name TEXT NOT NULL,
                 definition TEXT NOT NULL,
                 voting_power BIGINT NOT NULL,
@@ -42,7 +42,10 @@ impl AppView for ValidatorSet {
         .execute(dbtx.as_mut())
         .await?;
 
-        sqlx::query("CREATE UNIQUE INDEX idx_stake_validator_set_ik ON stake_validator_set(ik);")
+        sqlx::query("CREATE UNIQUE INDEX ON stake_validator_set(ik);")
+            .execute(dbtx.as_mut())
+            .await?;
+        sqlx::query("CREATE UNIQUE INDEX ON stake_validator_set(identity_key);")
             .execute(dbtx.as_mut())
             .await?;
 
@@ -177,7 +180,7 @@ async fn add_genesis_validators<'a>(
         // insert sql
         sqlx::query(
             "INSERT INTO stake_validator_set (
-                ik, ik_text, name, definition, voting_power, queued_delegations, 
+                ik, identity_key, name, definition, voting_power, queued_delegations, 
                 queued_undelegations, validator_state, bonding_state
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
@@ -223,7 +226,7 @@ async fn handle_upload<'a>(dbtx: &mut PgTransaction<'a>, val: Validator) -> Resu
         // Insert new validator
         sqlx::query(
             "INSERT INTO stake_validator_set (
-                ik, ik_text, name, definition, voting_power, queued_delegations, 
+                ik, identity_key, name, definition, voting_power, queued_delegations, 
                 queued_undelegations, validator_state, bonding_state
             )
             VALUES ($1, $2, $3, $4, 0, 0, 0, $5, $6)",
